@@ -84,3 +84,9 @@ public PrincipalCollection getRememberedPrincipals(SubjectContext subjectContext
 ```
 
 #### 3. 利用ysoserial生成反序列化payload
+
+通过java的反序列化漏洞，利用ysoserial工具对序列化后的二进制字节码注入其他操作，如打开当前机器的计算器程序。
+
+这里需要构建出Base64编码和AES加密后的payload(即最后是序列化后的二进制文件)，通过ysoserial修改这个payload注入执行打开计算器的command，见poc.py代码。
+
+运行shiro web服务，并执行: `python poc.py` 即可弹出计算器。
