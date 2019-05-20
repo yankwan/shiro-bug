@@ -90,3 +90,28 @@ public PrincipalCollection getRememberedPrincipals(SubjectContext subjectContext
 这里需要构建出Base64编码和AES加密后的payload(即最后是序列化后的二进制文件)，通过ysoserial修改这个payload注入执行打开计算器的command，见poc.py代码。
 
 运行shiro web服务，并执行: `python poc.py` 即可弹出计算器。
+
+
+#### 4. 版本修复
+
+1.2.4版本中在`AbstractRememberMeManager`类初始化时，设置了硬编码的key值:
+```java
+public AbstractRememberMeManager() {
+    this.serializer = new DefaultSerializer<PrincipalCollection>();
+    this.cipherService = new AesCipherService();
+    setCipherKey(DEFAULT_CIPHER_KEY_BYTES);
+}
+```
+
+在后续版本中修复了这个问题，如shiro 1.4.1版本中，改为如下方式:
+```java
+public AbstractRememberMeManager() {
+    this.serializer = new DefaultSerializer<PrincipalCollection>();
+    AesCipherService cipherService = new AesCipherService();
+    this.cipherService = cipherService;
+    setCipherKey(cipherService.generateNewKey().getEncoded());
+}
+```
+这里通过调用`cipherService.generateNewKey().getEncoded()`每次服务启动的时候都会随机生成key值，并且直接返回encode后字节数组。
+
+这样要伪造payload就变得困难了，因为不知道运行服务器那次生成的key值是多少。
